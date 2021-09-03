@@ -48,31 +48,7 @@ class jet(pygame.sprite.Sprite):
             else:
                 self.mis.remove(i)
         self.mis.draw(win)
-# class attacker(pygame.sprite.Sprite):
-#     file_path = os.path.join(base_path,'ball.png')
-#     img = pygame.image.load(file_path).convert_alpha()
-#     def __init(self,x,y):
-#         super().__init__()
-#         self.image = attacker.img
-#         self.step = 26
-#         self.rect = self.image.get_rect()
-#         self.rect.x = x
-#         self.rect.y = y
-#         self.rok = pygame.sprite.Group()
-#         self.left_right = True
-#     def load(self):
-#         if len(self.rok)<2:
-#             self.rock.add(rock(self.rect.x,self.rect.y))
-#     def update(self):
-#         if self.rect.x<=0:
-#             self.left_right = False
-#         if self.rect.x>=win_width:
-#             self.left_right = True
-#         if self.left_right:
-#             self.rect.x-=self.step
-#         else:
-#             self.rect.x+=self.step
-        
+
 class missile(pygame.sprite.Sprite):
     file_path = os.path.join(base_path,'ball.png')
     img = pygame.image.load(file_path).convert_alpha()
@@ -83,35 +59,60 @@ class missile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-class rock(pygame.sprite.Sprite):
-    file_path = os.path.join(base_path,'rock.png')
+class shark(pygame.sprite.Sprite):
+    file_path = os.path.join(base_path,'shark.png')
     img = pygame.image.load(file_path).convert_alpha()
     def __init__(self,x,y):
         super().__init__()
-        self.image = rock.img
-        self.step = 30
+        self.image = shark.img
+        self.step = 5
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.x = y
+        self.check = True
+        self.balls = pygame.sprite.Group()
+    def load(self):
+        print(len(self.balls))
+        if len(self.balls)<=1:
+            self.balls.add(black_ball(self.rect.x,self.rect.y))
+    def update(self):
+        if self.rect.x>=win_width-200:
+            self.check = False
+        if self.rect.x<=self.step:
+            self.check = True
+        if self.check:
+            self.rect.x+=self.step
+        else:
+            self.rect.x-=self.step
+        shark.load(self)
+        for f in self.balls:
+            if f.rect.y<win_height:
+                f.rect.y+=f.step
+            else:
+                self.balls.remove(f)
+        self.balls.draw(win)
+class black_ball(pygame.sprite.Sprite):
+    file_path = os.path.join(base_path,'black_ball.png')
+    img = pygame.image.load(file_path).convert_alpha()
+    def __init__(self,x,y):
+        super().__init__()
+        self.image = black_ball.img
+        self.step = 20
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.rok = pygame.sprite.Group()
-    def load(self):
-        self.rok.add(rock(random.randint(0,win_width),-200))
-    def update(self):
-        for i in self.rok:
-            if i.rect.y<win_height:
-                i.rect.y+=1
-            else:
-                self.rok.remove(i)
 jt = jet(win_width//2-50,win_height-200)
-rk = rock(random.randint(0,win_width),-200)
+sk = shark(win_width//2-50,200)
 objects = pygame.sprite.Group()
 objects.add(jt)
-objects.add(rk)
+objects.add(sk)
 rock_now = 1000
 run = True
 correct = False
 need_problem = False
 num=[]
+score = 0
+enemy = 0
 while run:
     pygame.time.delay(20)
     win.fill(cyan)
@@ -130,30 +131,21 @@ while run:
         jt.move_down()
     if keys[pygame.K_SPACE]:
         jt.load()
-    # if need_problem:
-    #     if keys[pygame.K_0]:
-    #         num.append(0)
-    #     if keys[pygame.K_1]:
-    #         num.append(1)
-    #     if keys[pygame.K_2]:
-    #         num.append(2)
-    #     if keys[pygame.K_3]:
-    #         num.append(3)
-    #     if keys[pygame.K_4]:
-    #         num.append(4)
-    #     if keys[pygame.K_5]:
-    #         num.append(5)
-    #     if keys[pygame.K_6]:
-    #         num.append(6)
-    #     if keys[pygame.K_7]:
-    #         num.append(7)
-    #     if keys[pygame.K_8]:
-    #         num.append(8)
-    #     if keys[pygame.K_9]:
-    #         num.append(9)
-    #     if keys[pygame.K_RETURN]:
-    #         if num==c_ans:
 
+    #collision
+    for i in jt.mis:
+        ball_crash = pygame.sprite.spritecollide(i,sk.balls,True)
+        if ball_crash:
+            jt.mis.remove(i)
+        collide = pygame.sprite.collide_rect(i,sk)
+        if collide:
+            score+=1
+            objects.remove(sk)
+    for j in sk.balls:
+        crash = pygame.sprite.collide_rect(j,jt)
+        if crash:
+            enemy+=1
+            objects.remove(jt)
     objects.update()
     objects.draw(win)
     pygame.display.update()
